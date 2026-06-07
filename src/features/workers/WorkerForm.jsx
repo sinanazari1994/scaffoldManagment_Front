@@ -5,13 +5,14 @@ import Icon from '../../components/ui/Icon';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../services/endpoints';
 import { ROLES } from '../../lib/constants';
+import { useData } from '../../contexts/DataContext';
 
 export default function WorkerForm() {
   const navigate = useNavigate();
+  const { fetchWorkers } = useData();
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState(ROLES.WORKER);
   const [error, setError] = useState('');
@@ -21,30 +22,29 @@ export default function WorkerForm() {
     e.preventDefault();
     setError('');
 
-    if (!fullName.trim() || !username.trim() || !password.trim()) {
-      setError('فیلدهای نام، نام کاربری و رمز عبور الزامی هستند');
+    if (!fullName.trim() || !phone.trim() || !password.trim()) {
+      setError('فیلدهای نام، شماره موبایل و رمز عبور الزامی هستند');
       return;
     }
 
     setLoading(true);
     try {
-      // ارسال درخواست ایجاد کاربر (بسته به نقش: Worker یا OfficeManager)
       await api.post(ENDPOINTS.USERS, {
         fullName: fullName.trim(),
-        phoneNumber: phone.trim(),
-        username: username.trim(),
+        phoneNumber: phone.trim(),        // شماره موبایل به‌عنوان شماره تماس
+        username: phone.trim(),           // شماره موبایل به‌عنوان نام کاربری
         password,
         role,
       });
 
+      await fetchWorkers();
       navigate('/manager/workers');
     } catch (err) {
-     const message = err.response?.data?.message || '';
-if (message.startsWith('PLAN_LIMIT_REACHED')) {
-  const reason = message.split(':')[1] || 'users';
-  window.location.href = `/plan-limit?reason=${reason}`;
-  return;
-}
+      const message = err.response?.data?.message || '';
+      if (message.startsWith('PLAN_LIMIT_REACHED')) {
+        window.location.href = `/plan-limit?reason=${message.split(':')[1] || 'users'}`;
+        return;
+      }
       setError(message || 'خطا در ثبت کاربر. لطفاً دوباره تلاش کنید.');
     } finally {
       setLoading(false);
@@ -69,22 +69,12 @@ if (message.startsWith('PLAN_LIMIT_REACHED')) {
           </div>
 
           <div className="fg">
-            <label className="fl">شماره موبایل</label>
+            <label className="fl">شماره موبایل *</label>
             <input
               className="fi"
               value={phone}
               onChange={e => setPhone(e.target.value)}
               placeholder="۰۹۱۲xxxxxxx"
-            />
-          </div>
-
-          <div className="fg">
-            <label className="fl">نام کاربری *</label>
-            <input
-              className="fi"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              placeholder="برای ورود"
               required
             />
           </div>

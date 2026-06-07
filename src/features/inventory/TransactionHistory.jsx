@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import Icon from '../../components/ui/Icon';
+import JalaliDatePicker from '../../components/ui/JalaliDatePicker';
+import { fromJalali, toJalali } from '../../lib/dateHelpers';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../services/endpoints';
 import { useProjects } from '../../contexts/ProjectContext';
@@ -9,7 +11,6 @@ import { useWarehouses } from '../../contexts/WarehouseContext';
 import { useTransfers } from '../../contexts/TransfersContext';
 import { useWork } from '../../contexts/WorkContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { toJalali } from '../../lib/dateHelpers';
 
 export default function TransactionHistory() {
   const { whId } = useParams(); // optional warehouse filter
@@ -42,8 +43,8 @@ export default function TransactionHistory() {
         if (filterProject) params.projectId = filterProject;
         if (filterWarehouse) params.warehouseId = filterWarehouse;
         else if (whId) params.warehouseId = whId;   // if whId is provided, filter by that warehouse
-        if (dateFrom) params.from = dateFrom;
-        if (dateTo) params.to = dateTo;
+        if (dateFrom) params.from = fromJalali(dateFrom);
+        if (dateTo) params.to = fromJalali(dateTo);
 
         const res = await api.get(ENDPOINTS.REPORTS_TRANSACTIONS, { params });
         setTransactions(Array.isArray(res.data) ? res.data : []);
@@ -227,14 +228,8 @@ export default function TransactionHistory() {
             </div>
           </div>
           <div className="g2">
-            <div className="fg">
-              <label className="fl">از تاریخ</label>
-              <input type="date" className="fi text-sm" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
-            </div>
-            <div className="fg">
-              <label className="fl">تا تاریخ</label>
-              <input type="date" className="fi text-sm" value={dateTo} onChange={e => setDateTo(e.target.value)} />
-            </div>
+            <JalaliDatePicker label="از تاریخ" value={dateFrom} onChange={setDateFrom} />
+            <JalaliDatePicker label="تا تاریخ" value={dateTo} onChange={setDateTo} />
           </div>
         </div>
 

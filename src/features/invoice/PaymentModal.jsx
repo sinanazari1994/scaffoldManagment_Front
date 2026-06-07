@@ -1,22 +1,24 @@
 import { useState, useEffect } from 'react';
 import Sheet from '../../components/ui/Sheet';
 import Icon from '../../components/ui/Icon';
+import JalaliDatePicker from '../../components/ui/JalaliDatePicker';
+import { fromJalali, getJalaliToday } from '../../lib/dateHelpers';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../services/endpoints';
 
 export default function PaymentModal({ open, onClose, projectId, editingPayment = null }) {
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(getJalaliToday());
   const [note, setNote] = useState('');
 
   useEffect(() => {
     if (editingPayment) {
       setAmount(editingPayment.amount?.toString() || '');
-      setDate(editingPayment.date?.slice(0, 10) || new Date().toISOString().slice(0, 10));
+      setDate(editingPayment.date?.slice(0, 10) || getJalaliToday());
       setNote(editingPayment.note || '');
     } else {
       setAmount('');
-      setDate(new Date().toISOString().slice(0, 10));
+      setDate(getJalaliToday());
       setNote('');
     }
   }, [editingPayment, open]);
@@ -30,7 +32,7 @@ export default function PaymentModal({ open, onClose, projectId, editingPayment 
         // ویرایش – projectId حذف شود
         await api.put(`${ENDPOINTS.PAYMENTS}/${editingPayment.id}`, {
           amount: numAmount,
-          date: new Date(date).toISOString(),  // تبدیل به ISO
+          date: fromJalali(date),
           note: note.trim() || null,
         });
       } else {
@@ -38,7 +40,7 @@ export default function PaymentModal({ open, onClose, projectId, editingPayment 
         await api.post(ENDPOINTS.PAYMENTS, {
           projectId,
           amount: numAmount,
-          date: new Date(date).toISOString(),
+          date: fromJalali(date),
           note: note.trim() || null,
         });
       }
@@ -64,15 +66,7 @@ export default function PaymentModal({ open, onClose, projectId, editingPayment 
           />
         </div>
 
-        <div className="fg">
-          <label className="fl">📅 تاریخ پرداخت</label>
-          <input
-            type="date"
-            className="fi"
-            value={date}
-            onChange={e => setDate(e.target.value)}
-          />
-        </div>
+        <JalaliDatePicker label="📅 تاریخ پرداخت" value={date} onChange={setDate} />
 
         <div className="fg">
           <label className="fl">توضیحات (اختیاری)</label>

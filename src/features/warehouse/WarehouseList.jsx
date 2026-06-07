@@ -11,6 +11,7 @@ import ProjectTab from './components/ProjectTab';
 import InModal from './components/InModal';
 import OutModal from './components/OutModal';
 import AddEquipmentModal from './components/AddEquipmentModal';
+import AddEquipmentTypeModal from './components/AddEquipmentTypeModal';
 
 export default function WarehouseList() {
   const { warehouses = [], isLoading, fetchWarehouses, fetchAggregatedInventory } = useWarehouses();
@@ -26,11 +27,15 @@ export default function WarehouseList() {
   const navigate = useNavigate();
   const isAdmin = user?.role === ROLES.CONTRACTOR;
 
-  useEffect(() => { fetchPendingTransfers(); }, [fetchPendingTransfers]);
+  // واکشی اولیه
+  useEffect(() => {
+    fetchWarehouses();
+    fetchPendingTransfers();
+  }, [fetchWarehouses, fetchPendingTransfers]);
 
   const [tab, setTab] = useState('warehouses');
 
-  // stateهای مودال‌ها
+  // stateهای مودال‌ها (بالا نگه داشته می‌شوند تا بین فرزندان به اشتراک گذاشته شوند)
   const [showInModal, setShowInModal] = useState(false);
   const [inEntityType, setInEntityType] = useState(null);
   const [inEntityId, setInEntityId] = useState(null);
@@ -42,81 +47,129 @@ export default function WarehouseList() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addWhId, setAddWhId] = useState(null);
 
-  // توابع بازکنندهٔ مودال
-  const openInModal = (type, id) => { setInEntityType(type); setInEntityId(id); setShowInModal(true); };
-  const openOutModal = (type, id) => { setOutEntityType(type); setOutEntityId(id); setShowOutModal(true); };
-  const openAddModal = (whId) => { setAddWhId(whId); setShowAddModal(true); };
+  const [showNewEquipModal, setShowNewEquipModal] = useState(false);
+
+  // توابعی که مودال‌ها نیاز دارند
+  const openInModal = (type, id) => {
+    setInEntityType(type);
+    setInEntityId(id);
+    setShowInModal(true);
+  };
+
+  const openOutModal = (type, id) => {
+    setOutEntityType(type);
+    setOutEntityId(id);
+    setShowOutModal(true);
+  };
+
+  const openAddModal = (whId) => {
+    setAddWhId(whId);
+    setShowAddModal(true);
+  };
 
   const handleInSuccess = async (itemsArray) => {
-  await resolveItemsFromPending(inEntityType, inEntityId, user?.id || 'unknown', itemsArray);
-  setShowInModal(false);
-  fetchPendingTransfers();
-
-  // به‌روزرسانی state مقصد (انبار یا پروژه)
-  if (inEntityType === 'warehouse') {
-    await fetchWarehouses();
-  } else {
-    await fetchProjects();
-  }
-};
-
+    await resolveItemsFromPending(inEntityType, inEntityId, user?.id || 'unknown', itemsArray);
+    setShowInModal(false);
+    fetchPendingTransfers();
+    
+    // به‌روزرسانی موجودی مقصد
+    if (inEntityType === 'warehouse') {
+      await fetchWarehouses();
+    } else {
+      await fetchProjects();
+    }
+  };
 
   const handleOutSuccess = async (itemsArray) => {
-  if (outEntityType === 'warehouse') {
-    await createOutgoingTransfer(outEntityId, itemsArray, user?.id || 'unknown');
-    await fetchWarehouses();
-  } else {
-    await createProjectToPendingTransfer(outEntityId, itemsArray, user?.id || 'unknown');
-    await fetchProjects();
-  }
-  setShowOutModal(false);
-  fetchPendingTransfers();
-};
+    if (outEntityType === 'warehouse') {
+      await createOutgoingTransfer(outEntityId, itemsArray, user?.id || 'unknown');
+      await fetchWarehouses();
+    } else {
+      await createProjectToPendingTransfer(outEntityId, itemsArray, user?.id || 'unknown');
+      await fetchProjects();
+    }
+    setShowOutModal(false);
+    fetchPendingTransfers();
+  };
 
   return (
     <AppLayout title="دارایی‌ها" onBack={() => navigate(-1)}>
       <div className="p-4 max-w-md mx-auto space-y-4">
+        {/* تب‌ها */}
         <div className="flex bg-[var(--bg2)] rounded-xl p-1">
-          <button className={`flex-1 py-2.5 rounded-lg font-bold text-sm ${tab === 'warehouses' ? 'bg-white shadow text-[var(--ora)]' : 'text-[var(--t3)]'}`} onClick={() => setTab('warehouses')}>🏗️ انبارها</button>
-          <button className={`flex-1 py-2.5 rounded-lg font-bold text-sm ${tab === 'projects' ? 'bg-white shadow text-[var(--ora)]' : 'text-[var(--t3)]'}`} onClick={() => setTab('projects')}>📋 پروژه‌ها</button>
+          <button
+            className={`flex-1 py-2.5 rounded-lg font-bold text-sm ${tab === 'warehouses' ? 'bg-white shadow text-[var(--ora)]' : 'text-[var(--t3)]'}`}
+            onClick={() => setTab('warehouses')}
+          >
+            🏗️ انبارها
+          </button>
+          <button
+            className={`flex-1 py-2.5 rounded-lg font-bold text-sm ${tab === 'projects' ? 'bg-white shadow text-[var(--ora)]' : 'text-[var(--t3)]'}`}
+            onClick={() => setTab('projects')}
+          >
+            📋 پروژه‌ها
+          </button>
         </div>
 
-        {tab === 'warehouses' && (
-          <WarehouseTab
-            warehouses={warehouses}
-            isAdmin={isAdmin}
-            onNewWarehouse={() => navigate('/manager/warehouses/new')}
-            onIn={openInModal}
-            onOut={openOutModal}
-            onAdd={openAddModal}
-            fetchWarehouses={fetchWarehouses}
-            fetchAggregatedInventory={fetchAggregatedInventory}
-          />
-        )}
+        <WarehouseTab
+  warehouses={warehouses}
+  isAdmin={isAdmin}
+  onNewWarehouse={() => navigate('/manager/warehouses/new')}
+  onIn={openInModal}
+  onOut={openOutModal}
+  onAdd={openAddModal}
+  fetchAggregatedInventory={fetchAggregatedInventory}   // ← این خط را اضافه کنید
+/>
 
         {tab === 'projects' && (
-          <ProjectTab projects={projects} onIn={openInModal} onOut={openOutModal} />
+          <ProjectTab
+            projects={projects}
+            onIn={openInModal}
+            onOut={openOutModal}
+          />
         )}
       </div>
 
-      <InModal open={showInModal} onClose={() => setShowInModal(false)} onSuccess={handleInSuccess}
-               pendingTransfers={pendingTransfers} warehouses={warehouses} projects={projects}
-               entityType={inEntityType} entityId={inEntityId} />
+      {/* مودال‌ها */}
+      <InModal
+        open={showInModal}
+        onClose={() => setShowInModal(false)}
+        onSuccess={handleInSuccess}
+        pendingTransfers={pendingTransfers}
+        warehouses={warehouses}
+        projects={projects}
+        entityType={inEntityType}
+        entityId={inEntityId}
+      />
 
-      <OutModal open={showOutModal} onClose={() => setShowOutModal(false)} onSuccess={handleOutSuccess}
-                warehouses={warehouses} projects={projects} entityType={outEntityType} entityId={outEntityId}
-                fetchAggregatedInventory={fetchAggregatedInventory} />
+      <OutModal
+        open={showOutModal}
+        onClose={() => setShowOutModal(false)}
+        onSuccess={handleOutSuccess}
+        warehouses={warehouses}
+        projects={projects}
+        entityType={outEntityType}
+        entityId={outEntityId}
+        fetchAggregatedInventory={fetchAggregatedInventory}
+      />
 
       {isAdmin && (
-        <AddEquipmentModal
-          open={showAddModal}
-          onClose={() => setShowAddModal(false)}
-          warehouseId={addWhId}
-          onAddSuccess={async (whId) => {
-            setShowAddModal(false);
-            await fetchWarehouses(); // به‌روزرسانی لیست انبارها → WarehouseTab خودکار refresh می‌کند
-          }}
-        />
+        <>
+          <AddEquipmentModal
+            open={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            warehouseId={addWhId}
+            onAddSuccess={() => {
+              setShowAddModal(false);
+              fetchWarehouses();
+            }}
+            onNewTypeRequest={() => setShowNewEquipModal(true)}
+          />
+          <AddEquipmentTypeModal
+            open={showNewEquipModal}
+            onClose={() => setShowNewEquipModal(false)}
+          />
+        </>
       )}
     </AppLayout>
   );

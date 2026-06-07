@@ -7,9 +7,7 @@ import { ENDPOINTS } from '../../services/endpoints';
 export default function RegisterPage() {
   const [companyName, setCompanyName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
   const [adminFullName, setAdminFullName] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -21,9 +19,7 @@ export default function RegisterPage() {
     setError('');
     setSuccess('');
 
-    // اعتبارسنجی ساده
-    if (!companyName.trim() || !phoneNumber.trim() || !email.trim() ||
-        !adminFullName.trim() || !username.trim() || !password.trim()) {
+    if (!companyName.trim() || !phoneNumber.trim() || !adminFullName.trim() || !password.trim()) {
       setError('همهٔ فیلدها الزامی هستند');
       return;
     }
@@ -31,20 +27,17 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await api.post(ENDPOINTS.AUTH.REGISTER, {
-        companyName: companyName.trim(),
-        phoneNumber: phoneNumber.trim(),
-        email: email.trim(),
-        adminFullName: adminFullName.trim(),
-        adminUsername: username.trim(),
-        adminPassword: password,
-      });
+  companyName: companyName.trim(),
+  phoneNumber: phoneNumber.trim(),
+  adminFullName: adminFullName.trim(),
+  adminUsername: phoneNumber.trim(),
+  adminPassword: password,
+});
       setSuccess('ثبت‌نام با موفقیت انجام شد. اکنون می‌توانید وارد شوید.');
       // پاک‌سازی فرم
       setCompanyName('');
       setPhoneNumber('');
-      setEmail('');
       setAdminFullName('');
-      setUsername('');
       setPassword('');
       // بعد از ۲ ثانیه به صفحه ورود برو
       setTimeout(() => navigate('/login'), 2000);
@@ -71,16 +64,8 @@ export default function RegisterPage() {
               <input className="fi" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="۰۹۱۲xxxxxxx" required />
             </div>
             <div className="fg">
-              <label className="fl">ایمیل *</label>
-              <input className="fi" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@domain.com" required />
-            </div>
-            <div className="fg">
               <label className="fl">نام مدیر *</label>
               <input className="fi" value={adminFullName} onChange={e => setAdminFullName(e.target.value)} placeholder="نام و نام خانوادگی" required />
-            </div>
-            <div className="fg">
-              <label className="fl">نام کاربری *</label>
-              <input className="fi" value={username} onChange={e => setUsername(e.target.value)} placeholder="برای ورود" required />
             </div>
             <div className="fg">
               <label className="fl">رمز عبور *</label>

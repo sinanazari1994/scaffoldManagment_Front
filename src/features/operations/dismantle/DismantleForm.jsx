@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import Icon from '../../../components/ui/Icon';
+import JalaliDatePicker from '../../../components/ui/JalaliDatePicker';
+import { fromJalali, getJalaliToday } from '../../../lib/dateHelpers';
 import { useWork } from '../../../contexts/WorkContext';
 import { useServices } from '../../../contexts/ServiceContext';
 import { useData } from '../../../contexts/DataContext';
@@ -24,7 +26,7 @@ export default function DismantleForm({
   const [width, setWidth] = useState('');
   const [height, setHeight] = useState('');
   const [selectedWorkers, setSelectedWorkers] = useState([]);
-  const [dismantleDate, setDismantleDate] = useState(new Date().toISOString().slice(0, 10));
+  const [dismantleDate, setDismantleDate] = useState(getJalaliToday());
 
   const availableWorkers = (workers || []).filter(w => w.role === ROLES.WORKER);
 
@@ -66,7 +68,7 @@ export default function DismantleForm({
       height: inputMode === 'dimensions' ? parseFloat(height) : null,
       volume: computedVolume,
       workerIds: selectedWorkers,
-      date: dismantleDate,
+      date: fromJalali(dismantleDate),
     });
 
     await fetchAllWorkEntries();
@@ -76,7 +78,7 @@ export default function DismantleForm({
     setWidth('');
     setHeight('');
     setSelectedWorkers([]);
-    setDismantleDate(new Date().toISOString().slice(0, 10));
+    setDismantleDate(getJalaliToday());
   };
 
   const handleAddRemaining = async (locationTitle) => {
@@ -95,7 +97,7 @@ export default function DismantleForm({
       locationId: group.locationId || null,
       volume: remaining,
       workerIds: [],
-      date: dismantleDate,
+      date: fromJalali(dismantleDate),
     });
 
     await fetchAllWorkEntries();
@@ -231,11 +233,7 @@ export default function DismantleForm({
                       </div>
                     </div>
 
-                    <div className="fg">
-                      <label className="fl">📅 تاریخ بازکردن</label>
-                      <input type="date" className="fi" value={dismantleDate}
-                        onChange={e => setDismantleDate(e.target.value)} />
-                    </div>
+                    <JalaliDatePicker label="📅 تاریخ بازکردن" value={dismantleDate} onChange={setDismantleDate} />
 
                     <button className="btn btn-d btn-w"
                       disabled={computedVolume <= 0 || selectedWorkers.length === 0}

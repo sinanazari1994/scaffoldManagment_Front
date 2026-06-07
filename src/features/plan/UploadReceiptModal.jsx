@@ -2,12 +2,14 @@ import { useState } from 'react';
 import Sheet from '../../components/ui/Sheet';
 import Icon from '../../components/ui/Icon';
 import ImageUploader from '../../components/ui/ImageUploader';
+import JalaliDatePicker from '../../components/ui/JalaliDatePicker';
+import { fromJalali, getJalaliToday } from '../../lib/dateHelpers';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../services/endpoints';
 
 export default function UploadReceiptModal({ open, onClose }) {
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(getJalaliToday());
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -19,7 +21,7 @@ export default function UploadReceiptModal({ open, onClose }) {
     try {
       await api.post(ENDPOINTS.RECEIPTS || '/receipts', {
         amount: amt,
-        date,
+        date: fromJalali(date),
         imageUrl: images[0],   // اولین عکس به‌عنوان فیش
       });
       setSuccess(true);
@@ -27,7 +29,7 @@ export default function UploadReceiptModal({ open, onClose }) {
         onClose();
         setSuccess(false);
         setAmount('');
-        setDate(new Date().toISOString().slice(0, 10));
+        setDate(getJalaliToday());
         setImages([]);
       }, 2000);
     } catch (err) {
@@ -55,15 +57,7 @@ export default function UploadReceiptModal({ open, onClose }) {
                 min="1"
               />
             </div>
-            <div className="fg">
-              <label className="fl">📅 تاریخ واریز</label>
-              <input
-                type="date"
-                className="fi"
-                value={date}
-                onChange={e => setDate(e.target.value)}
-              />
-            </div>
+            <JalaliDatePicker label="📅 تاریخ واریز" value={date} onChange={setDate} />
             <ImageUploader images={images} onChange={setImages} />
             <button
               className="btn btn-p btn-w"

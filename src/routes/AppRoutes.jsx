@@ -72,6 +72,16 @@ export default function AppRoutes() {
       <Route path="/worker/tasks/:taskId" element={<Navigate to="/worker/dashboard" replace />} />
       <Route path="/worker/tasks/:taskId/worklog" element={<Navigate to="/worker/dashboard" replace />} />
       <Route path="/worker/more" element={<div className="p-6 text-center">تنظیمات</div>} />
+      <Route
+  path="/worker/warehouses"
+  element={
+    <PrivateRoute>
+      <RoleBasedRoute roles={[ROLES.WORKER]}>
+        <WarehouseList />
+      </RoleBasedRoute>
+    </PrivateRoute>
+  }
+/>
 
       {/* ========== Manager ========== */}
       <Route
@@ -116,15 +126,15 @@ export default function AppRoutes() {
       />
      
       <Route
-        path="/manager/warehouses"
-        element={
-          <PrivateRoute>
-            <RoleBasedRoute roles={[ROLES.CONTRACTOR, ROLES.OFFICE_MANAGER]}>
-              <WarehouseList />
-            </RoleBasedRoute>
-          </PrivateRoute>
-        }
-      />
+  path="/manager/warehouses"
+  element={
+    <PrivateRoute>
+      <RoleBasedRoute roles={[ROLES.CONTRACTOR, ROLES.OFFICE_MANAGER, ROLES.WORKER]}>
+        <WarehouseList />
+      </RoleBasedRoute>
+    </PrivateRoute>
+  }
+/>
       <Route
         path="/manager/warehouses/new"
         element={

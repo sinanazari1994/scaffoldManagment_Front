@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import LocationAutocomplete from '../../../components/ui/LocationAutocomplete';
 import Icon from '../../../components/ui/Icon';
 import Sheet from '../../../components/ui/Sheet';
+import JalaliDatePicker from '../../../components/ui/JalaliDatePicker';
+import { fromJalali, getJalaliToday } from '../../../lib/dateHelpers';
 import api from '../../../services/api';
 import { ENDPOINTS } from '../../../services/endpoints';
 import { useWork } from '../../../contexts/WorkContext';
@@ -21,7 +23,7 @@ export default function DeliveryForm({ projectId }) {
   const [deliverLocationTitle, setDeliverLocationTitle] = useState('');
   const [deliverAvailableLocations, setDeliverAvailableLocations] = useState([]);
   const [installedVolume, setInstalledVolume] = useState(null);
-  const [deliveryDate, setDeliveryDate] = useState(new Date().toISOString().slice(0, 10));
+  const [deliveryDate, setDeliveryDate] = useState(getJalaliToday());
 
   // stateهای مودال سرویس جدید
   const [showNewServiceModal, setShowNewServiceModal] = useState(false);
@@ -169,14 +171,14 @@ export default function DeliveryForm({ projectId }) {
       serviceTypeName,
       locationTitle: deliverLocationTitle.trim(),
       locationId: finalLocationId,
-      date: deliveryDate,
+      date: fromJalali(deliveryDate),
     });
 
     // رفرش لیست از ابتدا
     await fetchDeliveries(1);
     setPage(1);
     setDeliverLocationTitle('');
-    setDeliveryDate(new Date().toISOString().slice(0, 10));
+    setDeliveryDate(getJalaliToday());
 
     // به‌روزرسانی مکان‌های در دسترس
     if (deliverServiceTypeId) {
@@ -243,16 +245,7 @@ export default function DeliveryForm({ projectId }) {
         </div>
       )}
 
-      {/* تاریخ تحویل */}
-      <div className="fg">
-        <label className="fl">📅 تاریخ تحویل</label>
-        <input
-          type="date"
-          className="fi"
-          value={deliveryDate}
-          onChange={e => setDeliveryDate(e.target.value)}
-        />
-      </div>
+      <JalaliDatePicker label="📅 تاریخ تحویل" value={deliveryDate} onChange={setDeliveryDate} />
 
       {/* دکمه ثبت تحویل */}
       <button
